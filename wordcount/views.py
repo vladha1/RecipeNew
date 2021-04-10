@@ -23,11 +23,8 @@ def count1(request):
     #return render(request,'count.html',{'fulltext':fulltext,'count':len(wordlist),'dict':sortedwords,'unique':len(wlst)})
 
 
-
 def about(request):
     return render(request,'about.html')
-
-
 
 dynamodb=boto3.resource('dynamodb',region_name='ap-south-1')
 recipe=dynamodb.Table('Recipe')
@@ -44,7 +41,6 @@ for item in js1['Items']:
 #print(ingredientlist)
 
 
-
 for names in ingredientlist:
     name=names.pop('item')
     newdict[name]=names
@@ -54,14 +50,33 @@ print("newdict",newdict)
 
 
 
+
 def alldishes(mustuse):
+    itemtype="x"
+    itemregion="x"
+    for items in mustuse:
+        if items in ['Snacks','Drinks','Meals','Curry']:
+            itemtype=items
+            
+        elif items in ['Indian','Global','American']:
+            itemregion=items
+            
+    if itemtype!="x":
+        mustuse.remove(itemtype)
+    
+    if itemregion!="x":
+        mustuse.remove(itemregion)
+
+
     finalrecipes=[]    
     dishes={}
     have=set()
     for items in js['Items']:
             print(items.keys)
-            dishes.update({items['Dish']:{'ingredients':set(items['Ingredients']),'recipe':items['Recipe'],'Image':items['Image'],'Region':items['Region'],"Time":items['Time'],"Type":items['Type'],"Link":items["Link"]}})
-   
+            
+            if (itemregion=='x' or items['Region']==itemregion) and (itemtype=='x' or items['Type']==itemtype):
+                dishes.update({items['Dish']:{'ingredients':set(items['Ingredients']),'recipe':items['Recipe'],'Image':items['Image'],'Region':items['Region'],"Time":items['Time'],"Type":items['Type'],"Link":items["Link"]}})
+
 
     for ingredient in js1['Items']:
         if ingredient['quantity']!=0:
@@ -87,7 +102,7 @@ def alldishes(mustuse):
         dishresult=dish
         print('dishresult:',dishresult)
 
-        if len(mustuse.intersection(needed))==len(mustuse):
+        if len(mustuse.intersection(needed))==len(mustuse) or (len(mustuse)==1 and list(mustuse)[0] in dish):
             if len(already)!=0:
                 if len(diff)==0:        
                     dishresult={'dish':dish,'needed':needed,'diff':diff,'already':already,'dishtype':dishtype,'region':region,'cooktime':cooktime,'Link':Link,'Status':'Have everything','Image':Image,'dish_ingredients':dish_ingredients,'dish_ingredient_detail':dish_ingredient_detail}
@@ -99,12 +114,15 @@ def alldishes(mustuse):
             #print(reciperesponse)
             finalrecipes=finalrecipes+[dishresult]
                         
+
+
     return finalrecipes
 
 def count(request):
     fulltext=set(request.GET['fulltext'].split(","))
     fulltext={i for i in fulltext if i}
     print(fulltext)
+
     reciperesp=alldishes(fulltext)
     return render(request,'count.html',{'response':reciperesp})
 
