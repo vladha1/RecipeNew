@@ -1,11 +1,24 @@
-<h1>What ingredients do you want to use?</h1>
-<form action="{%url 'count' %}">
+<HTML>
 
+    <H1>Times of India</H1>
+        <TABLE>
+            <TR>
+                {% for newsitem in news %}
+                <TD>{{newsitem.count}}</TD>
+                <TD><A href='{{newsitem.link}}'> {{newsitem.headline}} </A></TD>
+            </TR>
+            {% endfor %}
+        </TABLE>
     
-    <textarea cols="40" rows="5" name="fulltext"></textarea>
-    <br />
-    <input type="submit" value="Count!">
-    <input type="submit" value="About!" formaction="{%url 'about' %}">
-</form>
-
-
+        <H1>Apple Stock Price History</H1>
+    
+        {% autoescape off %}{{ tickers }}{% endautoescape %} 
+        <br/>
+        <H1>RBI Notifications</H1>
+        {% autoescape off %}{{ rbi }}{% endautoescape %} 
+    
+    
+    </HTML>
+    
+    
+    
